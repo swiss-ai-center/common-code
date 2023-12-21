@@ -58,9 +58,9 @@ runs:
 
         # Set service configuration (Ingress)
         yq ".metadata.name = \"${{ inputs.service-name }}-ingress\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
-        yq ".spec.rules[0].host = \"${{ env.SERVICE_URL }}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
+        yq ".spec.rules[0].host = \"${SERVICE_URL#*://}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
         yq ".spec.rules[0].http.paths[0].backend.service.name = \"${{ inputs.service-name }}-service\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
-        yq ".spec.tls[0].hosts[0] = \"${{ env.SERVICE_URL }}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
+        yq ".spec.tls[0].hosts[0] = \"${SERVICE_URL#*://}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
 
         # Set service configuration (Service)
         yq ".metadata.name = \"${{ inputs.service-name }}-service\"" service.yml > new-service.yml && mv new-service.yml service.yml
