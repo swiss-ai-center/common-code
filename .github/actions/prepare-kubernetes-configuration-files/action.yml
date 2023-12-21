@@ -57,7 +57,7 @@ runs:
         yq '.data = (.data | to_entries | map({"key": .key, "value": "${" + .key + "}"}) | from_entries)' config-map.yml | envsubst > new-config-map.yml && mv new-config-map.yml config-map.yml
 
         # Set service configuration (Ingress)
-        yq ".metadata.name = \"${{ inputs.service-name }}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
+        yq ".metadata.name = \"${{ inputs.service-name }}-ingress\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
         yq ".spec.rules[0].host = \"${{ env.SERVICE_URL }}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
         yq ".spec.rules[0].http.paths[0].backend.service.name = \"${{ inputs.service-name }}-service\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
         yq ".spec.tls[0].hosts[0] = \"${{ env.SERVICE_URL }}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
