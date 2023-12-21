@@ -1,0 +1,50 @@
+# Documentation: https://docs.github.com/en/actions/creating-actions/creating-a-composite-action
+name: prepare_kubernetes_configuration_files
+description: Prepare Kubernetes configuration files
+
+inputs:
+  service-name:
+    description: Name of the service
+    required: true
+  service-url:
+    description: URL of the service
+    required: true
+  service-docker-image-tag:
+    description: Docker image tag of the service
+    required: true
+  configuration-files-location:
+    description: Configuration files location for Kubernetes
+    required: true
+    default: .
+
+runs:
+  using: composite
+  steps:
+    - name: Prepare Kubernetes configuration files
+      shell: bash
+      working-directory: ${{ inputs.configuration-files-location }}
+      run: |
+        # Set service configuration (ConfigMap)
+        yq ".metadata.name = \"${{ inputs.service-name }}-config\"" config-map.yml > new-config-map.yml && mv new-config-map.yml config-map.yml
+        yq ".metadata.labels.app = \"${{ inputs.service-name }}\"" config-map.yml > new-config-map.yml && mv new-config-map.yml config-map.yml
+        yq '.data = (.data | to_entries | map({"key": .key, "value": "${" + .key + "}"}) | from_entries)' config-map.yml | envsubst > new-config-map.yml && mv new-config-map.yml config-map.yml
+
+        # Set service configuration (Ingress)
+        yq ".metadata.name = \"${{ inputs.service-name }}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
+        yq ".spec.rules[0].host = \"${{ inputs.service-url }}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
+        yq ".spec.rules[0].http.paths[0].backend.service.name = \"${{ inputs.service-name }}-service\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
+        yq ".spec.tls[0].hosts[0] = \"${{ inputs.service-url }}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
+
+        # Set service configuration (Service)
+        yq ".metadata.name = \"${{ inputs.service-name }}-service\"" service.yml > new-service.yml && mv new-service.yml service.yml
+        yq ".spec.selector.app = \"${{ inputs.service-name }}\"" service.yml > new-service.yml && mv new-service.yml service.yml
+
+        # Set service configuration (StatefulSet)
+        yq ".metadata.name = \"${{ inputs.service-name }}-stateful\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
+        yq ".metadata.labels.app = \"${{ inputs.service-name }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
+        yq ".spec.serviceName = \"${{ inputs.service-name }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
+        yq ".spec.selector.matchLabels.app = \"${{ inputs.service-name }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
+        yq ".spec.template.metadata.labels.app = \"${{ inputs.service-name }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
+        yq ".spec.template.spec.containers[0].name = \"${{ inputs.service-name }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
+        yq ".spec.template.spec.containers[0].image = \"${{ inputs.service-docker-image-tag }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
+        yq ".spec.template.spec.containers[0].envFrom[0].configMapRef.name = \"${{ inputs.service-name }}-config\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
