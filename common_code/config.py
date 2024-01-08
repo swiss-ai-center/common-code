@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List
 from functools import lru_cache
-from pydantic import BaseSettings
+from pydantic-settings import BaseSettings
 
 
 class Environment(str, Enum):
