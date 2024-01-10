@@ -15,12 +15,12 @@ class Service(BaseModel, metaclass=ABCMeta):
     slug: str
     url: str
     summary: str
-    description: str | None
+    description: str | None = None
     status: ServiceStatus
-    data_in_fields: List[FieldDescription] | None
-    data_out_fields: List[FieldDescription] | None
-    tags: List[ExecutionUnitTag] | None
-    has_ai: bool | None
+    data_in_fields: List[FieldDescription] | None = None
+    data_out_fields: List[FieldDescription] | None = None
+    tags: List[ExecutionUnitTag] | None = None
+    has_ai: bool | None = None
 
     def get_data_in_fields(self):
         """
