@@ -9,11 +9,11 @@ class TaskBase(BaseModel):
     """
     Task model
     """
-    data_in: List[str] | None
-    data_out: List[str] | None
-    status: TaskStatus | None
+    data_in: List[str] | None = None
+    data_out: List[str] | None = None
+    status: TaskStatus | None = None
     service_id: UUID
-    pipeline_id: UUID | None
+    pipeline_id: UUID | None = None
 
 
 class TaskRead(TaskBase):
@@ -28,10 +28,10 @@ class TaskUpdate(BaseModel):
     Task update model
     This model is used to update a task
     """
-    service: str | None
-    url: str | None
-    data_out: List[str] | None
-    status: TaskStatus | None
+    service: str | None = None
+    url: str | None = None
+    data_out: List[str] | None = None
+    status: TaskStatus | None = None
 
 
 class ServiceTaskTask(BaseModel):
@@ -41,10 +41,10 @@ class ServiceTaskTask(BaseModel):
     """
     id: UUID
     data_in: List[str]
-    data_out: List[str] | None
+    data_out: List[str] | None = None
     status: TaskStatus
     service_id: UUID
-    pipeline_execution_id: UUID | None
+    pipeline_execution_id: UUID | None = None
 
 
 class ServiceTaskBase(BaseModel):
