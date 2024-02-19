@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic.main import BaseModel
 from .enums import TaskStatus
 from ..common.enums import FieldDescriptionType
@@ -9,11 +9,11 @@ class TaskBase(BaseModel):
     """
     Task model
     """
-    data_in: List[str] | None = None
-    data_out: List[str] | None = None
-    status: TaskStatus | None = None
+    data_in: Optional[List[str]] = None
+    data_out: Optional[List[str]] = None
+    status: Optional[TaskStatus] = None
     service_id: UUID
-    pipeline_id: UUID | None = None
+    pipeline_id: Optional[UUID] = None
 
 
 class TaskRead(TaskBase):
@@ -28,10 +28,10 @@ class TaskUpdate(BaseModel):
     Task update model
     This model is used to update a task
     """
-    service: str | None = None
-    url: str | None = None
-    data_out: List[str] | None = None
-    status: TaskStatus | None = None
+    service: Optional[str] = None
+    url: Optional[str] = None
+    data_out: Optional[List[str]] = None
+    status: Optional[TaskStatus] = None
 
 
 class ServiceTaskTask(BaseModel):
@@ -41,10 +41,10 @@ class ServiceTaskTask(BaseModel):
     """
     id: UUID
     data_in: List[str]
-    data_out: List[str] | None = None
+    data_out: Optional[List[str]] = None
     status: TaskStatus
     service_id: UUID
-    pipeline_execution_id: UUID | None = None
+    pipeline_execution_id: Optional[UUID] = None
 
 
 class ServiceTaskBase(BaseModel):

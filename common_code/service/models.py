@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 from ..common.models import FieldDescription
 from ..common.models import ExecutionUnitTag
@@ -15,13 +15,13 @@ class Service(BaseModel, metaclass=ABCMeta):
     slug: str
     url: str
     summary: str
-    description: str | None = None
+    description: Optional[str] = None
     status: ServiceStatus
-    data_in_fields: List[FieldDescription] | None = None
-    data_out_fields: List[FieldDescription] | None = None
-    tags: List[ExecutionUnitTag] | None = None
-    docs_url: str | None = None
-    has_ai: bool | None = None
+    data_in_fields: Optional[List[FieldDescription]] = None
+    data_out_fields: Optional[List[FieldDescription]] = None
+    tags: Optional[List[ExecutionUnitTag]] = None
+    docs_url: Optional[str] = None
+    has_ai: Optional[bool] = None
 
     def get_data_in_fields(self):
         """
