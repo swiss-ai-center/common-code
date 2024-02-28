@@ -195,6 +195,7 @@ class TasksService:
         data_out_fields = self.my_service.get_data_out_fields()
 
         try:
+            TasksService.current_task.task.data_out = []
             for data_out_field in data_out_fields:
                 field_name = data_out_field["name"]
                 output_type = TasksService.current_task_data_out[field_name].type
@@ -219,9 +220,6 @@ class TasksService:
                     TasksService.current_task.s3_host,
                     TasksService.current_task.s3_bucket,
                 )
-
-                if TasksService.current_task.task.data_out is None:
-                    TasksService.current_task.task.data_out = []
 
                 TasksService.current_task.task.data_out.append(key)
                 TasksService.current_task.task.status = TaskStatus.FINISHED
