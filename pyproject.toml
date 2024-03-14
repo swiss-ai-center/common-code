@@ -15,16 +15,16 @@ maintainers = [
 
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
 dependencies = [
-  "aiobotocore==2.4.1",
-  "aiofiles==22.1.0",
-  "email-validator==2.1.0.post1",
-  "fastapi==0.108.0",
-  "flake8==5.0.4",
-  "httpx==0.23.1",
-  "pydantic_settings==2.1.0",
-  "python-dotenv==0.21.0",
-  "PyYAML==6.0",
-  "uvicorn==0.19.0",
+  "aiobotocore==2.12.1",
+  "aiofiles==23.2.1",
+  "email-validator==2.1.1",
+  "fastapi==0.110.0",
+  "flake8==7.0.0",
+  "httpx==0.27.0",
+  "pydantic_settings==2.2.1",
+  "python-dotenv==1.0.1",
+  "PyYAML==6.0.1",
+  "uvicorn==0.28.0",
 ]
 
 # List additional groups of dependencies here (e.g. development
@@ -37,10 +37,10 @@ dependencies = [
 # projects.
 [project.optional-dependencies]
 test = [
-  "pytest==7.2.0",
-  "pytest-asyncio==0.20.3",
-  "pytest-cov==4.0.0",
-  "pytest-httpserver==1.0.6",
+  "pytest==8.1.1",
+  "pytest-asyncio==0.23.5.post1",
+  "pytest-cov==4.1.0",
+  "pytest-httpserver==1.0.10",
 ]
 
 [project.urls]
