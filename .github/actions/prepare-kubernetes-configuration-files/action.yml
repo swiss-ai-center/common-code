@@ -55,8 +55,10 @@ runs:
         yq -i ".metadata.name = \"${{ inputs.service-name }}-config\"" config-map.yml
         yq -i ".metadata.labels.app = \"${{ inputs.service-name }}\"" config-map.yml
         yq -i '.data = (.data | to_entries | map({"key": .key, "value": "${" + .key + "}"}) | from_entries)' config-map.yml
-        envsubst < config-map.yml > config-map.yml
+        envsubst < config-map.yml > new-config-map.yml
+        mv new-config-map.yml config-map.yml
         cat config-map.yml
+        echo "TEST"
 
         # Set service configuration (Ingress)
         yq -i ".metadata.name = \"${{ inputs.service-name }}-ingress\"" ingress.yml
