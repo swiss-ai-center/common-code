@@ -56,7 +56,8 @@ runs:
         yq -i ".metadata.labels.app = \"${{ inputs.service-name }}\"" config-map.yml
         yq -i '.data = (.data | to_entries | map({"key": .key, "value": "${" + .key + "}"}) | from_entries)' config-map.yml
         envsubst < config-map.yml > config-map.yml
-        
+        cat config-map.yml
+
         # Set service configuration (Ingress)
         yq -i ".metadata.name = \"${{ inputs.service-name }}-ingress\"" ingress.yml
         yq -i ".spec.rules[0].host = \"${SERVICE_URL#*://}\"" ingress.yml
@@ -65,7 +66,6 @@ runs:
         # replace . with - in service url and add -tls-cert at the end
         SECRET_NAME=$(echo "${SERVICE_URL#*://}" | sed 's/\./-/g' | sed 's/$/-tls-cert/')
         yq -i ".spec.tls[0].secretName = \"$SECRET_NAME\"" ingress.yml
-        cat ingress.yml
 
         # Set service configuration (Service)
         yq -i ".metadata.name = \"${{ inputs.service-name }}-service\"" service.yml
