@@ -2,6 +2,12 @@
 name: remove-unnecessary-keys-from-kubernetes-configuration-files
 description: Remove unnecessary keys from kubernetes configuration files
 
+inputs:
+  configuration-files-location:
+    description: Configuration files location for Kubernetes
+    required: true
+    default: .
+
 runs:
   using: composite
   steps:
