@@ -1,0 +1,15 @@
+# Documentation: https://docs.github.com/en/actions/creating-actions/creating-a-composite-action
+name: remove-unnecessary-keys-from-kubernetes-configuration-files
+description: Remove unnecessary keys from kubernetes configuration files
+
+runs:
+  using: composite
+  steps:
+    - name: Prepare Kubernetes configuration files
+      shell: bash
+      working-directory: ${{ inputs.configuration-files-location }}
+      run: |
+        # Delete unnecessary service configuration keys (Ingress)
+        yq -i "del(.metadata.annotations)" ingress.yml
+        yq -i "del(.spec.ingressClassName)" ingress.yml
+        yq -i "del(.spec.tls[0].secretName)" ingress.yml
