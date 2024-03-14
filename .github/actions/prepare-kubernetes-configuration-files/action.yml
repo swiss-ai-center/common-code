@@ -52,26 +52,25 @@ runs:
         ENGINE_ANNOUNCE_RETRY_DELAY: ${{ inputs.engine-announce-retry-delay }}
       run: |
         # Set service configuration (ConfigMap)
-        yq ".metadata.name = \"${{ inputs.service-name }}-config\"" config-map.yml > new-config-map.yml && mv new-config-map.yml config-map.yml
-        yq ".metadata.labels.app = \"${{ inputs.service-name }}\"" config-map.yml > new-config-map.yml && mv new-config-map.yml config-map.yml
-        yq '.data = (.data | to_entries | map({"key": .key, "value": "${" + .key + "}"}) | from_entries)' config-map.yml | envsubst > new-config-map.yml && mv new-config-map.yml config-map.yml
-
+        yq -i ".metadata.name = \"${{ inputs.service-name }}-config\"" config-map.yml
+        yq -i ".metadata.labels.app = \"${{ inputs.service-name }}\"" config-map.yml
+        yq -i '.data = (.data | to_entries | map({"key": .key, "value": "${" + .key + "}"}) | from_entries)' config-map.yml
+        envsubst < config-map.yml > config-map.yml
+        
         # Set service configuration (Ingress)
-        yq ".metadata.name = \"${{ inputs.service-name }}-ingress\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
-        yq ".spec.rules[0].host = \"${SERVICE_URL#*://}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
-        yq ".spec.rules[0].http.paths[0].backend.service.name = \"${{ inputs.service-name }}-service\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
-        yq ".spec.tls[0].hosts[0] = \"${SERVICE_URL#*://}\"" ingress.yml > new-ingress.yml && mv new-ingress.yml ingress.yml
+        yq -i ".spec.rules[0].host = \"${SERVICE_URL#*://}\"" ingress.yml
+        yq -i ".spec.tls[0].hosts[0] = \"${SERVICE_URL#*://}\"" ingress.yml
 
         # Set service configuration (Service)
-        yq ".metadata.name = \"${{ inputs.service-name }}-service\"" service.yml > new-service.yml && mv new-service.yml service.yml
-        yq ".spec.selector.app = \"${{ inputs.service-name }}\"" service.yml > new-service.yml && mv new-service.yml service.yml
+        yq -i ".metadata.name = \"${{ inputs.service-name }}-service\"" service.yml
+        yq -i ".spec.selector.app = \"${{ inputs.service-name }}\"" service.yml
 
         # Set service configuration (StatefulSet)
-        yq ".metadata.name = \"${{ inputs.service-name }}-stateful\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
-        yq ".metadata.labels.app = \"${{ inputs.service-name }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
-        yq ".spec.serviceName = \"${{ inputs.service-name }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
-        yq ".spec.selector.matchLabels.app = \"${{ inputs.service-name }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
-        yq ".spec.template.metadata.labels.app = \"${{ inputs.service-name }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
-        yq ".spec.template.spec.containers[0].name = \"${{ inputs.service-name }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
-        yq ".spec.template.spec.containers[0].image = \"${{ inputs.service-docker-image-tag }}\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
-        yq ".spec.template.spec.containers[0].envFrom[0].configMapRef.name = \"${{ inputs.service-name }}-config\"" stateful.yml > new-stateful.yml && mv new-stateful.yml stateful.yml
+        yq -i ".metadata.name = \"${{ inputs.service-name }}-stateful\"" stateful.yml
+        yq -i ".metadata.labels.app = \"${{ inputs.service-name }}\"" stateful.yml
+        yq -i ".spec.serviceName = \"${{ inputs.service-name }}\"" stateful.yml
+        yq -i ".spec.selector.matchLabels.app = \"${{ inputs.service-name }}\"" stateful.yml
+        yq -i ".spec.template.metadata.labels.app = \"${{ inputs.service-name }}\"" stateful.yml
+        yq -i ".spec.template.spec.containers[0].name = \"${{ inputs.service-name }}\"" stateful.yml
+        yq -i ".spec.template.spec.containers[0].image = \"${{ inputs.service-docker-image-tag }}\"" stateful.yml
+        yq -i ".spec.template.spec.containers[0].envFrom[0].configMapRef.name = \"${{ inputs.service-name }}-config\"" stateful.yml
