@@ -63,7 +63,9 @@ runs:
         yq -i ".spec.rules[0].http.paths[0].backend.service.name = \"${{ inputs.service-name }}-service\"" ingress.yml
         yq -i ".spec.tls[0].hosts[0] = \"${SERVICE_URL#*://}\"" ingress.yml
         # replace . with - in service url and add -tls-cert at the end
-        yq -i ".spec.tls[0].secretName = \"${SERVICE_URL#*://} | sed 's/\./-/g' | sed 's/$/-tls-cert/'\"" ingress.yml
+        SECRET_NAME=$(echo "${SERVICE_URL#*://}" | sed 's/\./-/g' | sed 's/$/-tls-cert/')
+        yq -i ".spec.tls[0].secretName = \"$SECRET_NAME\"" ingress.yml
+        cat ingress.yml
 
         # Set service configuration (Service)
         yq -i ".metadata.name = \"${{ inputs.service-name }}-service\"" service.yml
