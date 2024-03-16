@@ -17,5 +17,4 @@ runs:
       run: |
         # Delete unnecessary service configuration keys (Ingress)
         yq -i "del(.metadata.annotations)" ingress.yml
-        yq -i "del(.spec.ingressClassName)" ingress.yml
         yq -i "del(.spec.tls[0].secretName)" ingress.yml
