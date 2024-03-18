@@ -1,0 +1,6 @@
+stages:
+  - review
+  - test
+  - train
+  - publish
+  - deploy
