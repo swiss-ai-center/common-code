@@ -44,3 +44,7 @@ class Service(BaseModel, metaclass=ABCMeta):
     @abstractmethod
     def process(self, data):
         pass
+
+    @abstractmethod
+    def main_test(self, data):
+        pass
