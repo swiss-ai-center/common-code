@@ -16,5 +16,5 @@ runs:
       working-directory: ${{ inputs.configuration-files-location }}
       run: |
         # Delete unnecessary service configuration keys (Ingress)
-        yq -i "del(.metadata.annotations)" ingress.yml
+        yq -i "del(.metadata.annotations.cert-manager\.io/cluster-issuer)" ingress.yml
         yq -i "del(.spec.tls[0].secretName)" ingress.yml
