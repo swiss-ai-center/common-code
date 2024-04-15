@@ -1,0 +1,50 @@
+.prepare-configuration-files-and-deploy-on-kubernetes-cluster:
+  stage: deploy
+  image: alpine
+  script:
+    # Install kubectl and yq
+    - apk add --no-cache gettext kubectl yq
+    # Export Kubeconfig file
+    - mkdir --parent ~/.kube
+    - echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
+    # Switch to kubernetes directory
+    - cd kubernetes
+    # Prepare configuration files
+    - |
+      # Set service configuration (ConfigMap)
+      yq -i ".metadata.name = \"${SERVICE_NAME}-config\"" config-map.yml
+      yq -i ".metadata.labels.app = \"${SERVICE_NAME}\"" config-map.yml
+      yq -i '.data = (.data | to_entries | map({"key": .key, "value": "${" + .key + "}"}) | from_entries)' config-map.yml
+      envsubst < config-map.yml > new-config-map.yml
+      mv new-config-map.yml config-map.yml
+
+      # Set service configuration (Ingress)
+      yq -i ".metadata.name = \"${SERVICE_NAME}-ingress\"" ingress.yml
+      yq -i ".spec.rules[0].host = \"${SERVICE_URL#*://}\"" ingress.yml
+      yq -i ".spec.rules[0].http.paths[0].backend.service.name = \"${SERVICE_NAME}-service\"" ingress.yml
+      yq -i ".spec.tls[0].hosts[0] = \"${SERVICE_URL#*://}\"" ingress.yml
+      # replace . with - in service url and add -tls-cert at the end
+      SECRET_NAME=$(echo "${SERVICE_URL#*://}" | sed 's/\./-/g' | sed 's/$/-tls-cert/')
+      yq -i ".spec.tls[0].secretName = \"$SECRET_NAME\"" ingress.yml
+
+      # Set service configuration (Service)
+      yq -i ".metadata.name = \"${SERVICE_NAME}-service\"" service.yml
+      yq -i ".spec.selector.app = \"${SERVICE_NAME}\"" service.yml
+
+      # Set service configuration (StatefulSet)
+      yq -i ".metadata.name = \"${SERVICE_NAME}-stateful\"" stateful.yml
+      yq -i ".metadata.labels.app = \"${SERVICE_NAME}\"" stateful.yml
+      yq -i ".spec.serviceName = \"${SERVICE_NAME}\"" stateful.yml
+      yq -i ".spec.selector.matchLabels.app = \"${SERVICE_NAME}\"" stateful.yml
+      yq -i ".spec.template.metadata.labels.app = \"${SERVICE_NAME}\"" stateful.yml
+      yq -i ".spec.template.spec.containers[0].name = \"${SERVICE_NAME}\"" stateful.yml
+      yq -i ".spec.template.spec.containers[0].image = \"${DOCKER_IMAGE_NAME}:${CI_COMMIT_SHA}\"" stateful.yml
+      yq -i ".spec.template.spec.containers[0].envFrom[0].configMapRef.name = \"${SERVICE_NAME}-config\"" stateful.yml
+    # Execute command on the Kubernetes cluster
+    - |
+      # Deploy service on the Kubernetes cluster
+      kubectl --namespace $NAMESPACE apply \
+        -f config-map.yml \
+        -f stateful.yml \
+        -f service.yml \
+        -f ingress.yml

@@ -1,0 +1,16 @@
+.remove-unnecessary-keys-from-kubernetes-configuration-files:
+  stage: deploy
+  image: alpine
+  script:
+    # Install kubectl and yq
+    - apk add --no-cache gettext kubectl yq
+    # Export Kubeconfig file
+    - mkdir --parent ~/.kube
+    - echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
+    # Switch to kubernetes directory
+    - cd kubernetes
+    # Prepare configuration files
+    - |
+      # Delete unnecessary service configuration keys (Ingress)
+      yq -i "del(.metadata.annotations.cert-manager\.io/cluster-issuer)" ingress.yml
+      yq -i "del(.spec.tls[0].secretName)" ingress.yml

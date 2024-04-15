@@ -94,11 +94,11 @@ class ServiceService:
         Get the service id from the engine
         """
         # TODO: Improve this when authentication is set on service side
-        services_response = await self.http_client.get(f"{engine_url}/services")
-        services = services_response.json()
-
-        for service in services:
-            if service['slug'] == slug:
+        service_response = await self.http_client.get(f"{engine_url}/services/slug/{slug}")
+        if service_response.status_code == 200:
+            service = service_response.json()
+            if service:
                 return service['id']
 
+        self.logger.error(f"Service {slug} not found in the engine")
         return None
