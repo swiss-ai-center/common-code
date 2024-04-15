@@ -24,6 +24,7 @@ class ExecutionUnitTag(TypedDict):
 class TestResult(TypedDict):
     """
     Test result model
+    This model is used to return a test result
     name: test name
     result: test result (True/False)
     """
@@ -35,6 +36,7 @@ class TestResult(TypedDict):
 class TestResultList(TypedDict):
     """
     Test result list model
+    This model is used to return a list of test results used in the service test
     tests_results: list of test results
     tests_passed: True if all tests passed, False otherwise
     """
