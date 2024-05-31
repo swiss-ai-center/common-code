@@ -38,7 +38,7 @@ runs:
 
     - name: Extract metadata (tags, labels) for Docker
       id: meta
-      uses: docker/metadata-action@v3
+      uses: docker/metadata-action@v5
       with:
         images: |
           ${{ inputs.docker-registry-url }}/${{ inputs.docker-image-name }}
@@ -47,7 +47,7 @@ runs:
           type=sha
 
     - name: Build and push Docker image
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v5
       with:
         context: ${{ inputs.docker-image-context }}
         push: true
