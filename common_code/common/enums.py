@@ -14,8 +14,17 @@ class FieldDescriptionType(str, Enum):
 
 
 class ExecutionUnitTagName(str, Enum):
+    GENERIC = "Generic"
     IMAGE_PROCESSING = "Image Processing"
     IMAGE_RECOGNITION = "Image Recognition"
+    IMAGE_GENERATION = "Image Generation"
+    AUDIO_PROCESSING = "Audio Processing"
+    AUDIO_GENERATION = "Audio Generation"
+    VIDEO_PROCESSING = "Video Processing"
+    VIDEO_GENERATION = "Video Generation"
+    DOCUMENT_PROCESSING = "Document Processing"
+    DOCUMENT_GENERATION = "Document Generation"
+    DATA_PREPROCESSING = "Data Preprocessing"
     NATURAL_LANGUAGE_PROCESSING = "Natural Language Processing"
     ANOMALY_DETECTION = "Anomaly Detection"
     RECOMMENDATION = "Recommendation"
@@ -23,14 +32,22 @@ class ExecutionUnitTagName(str, Enum):
     CLUSTERING = "Clustering"
     SEGMENTATION = "Segmentation"
     SPEECH_RECOGNITION = "Speech Recognition"
-    DATA_PREPROCESSING = "Data Preprocessing"
     SENTIMENT_ANALYSIS = "Sentiment Analysis"
     NEURAL_NETWORKS = "Neural Networks"
 
 
 class ExecutionUnitTagAcronym(str, Enum):
+    GENERIC = "GNR"
     IMAGE_PROCESSING = "IP"
     IMAGE_RECOGNITION = "IR"
+    IMAGE_GENERATION = "IG"
+    AUDIO_PROCESSING = "AP"
+    AUDIO_GENERATION = "AG"
+    VIDEO_PROCESSING = "VP"
+    VIDEO_GENERATION = "VG"
+    DOCUMENT_PROCESSING = "DP"
+    DOCUMENT_GENERATION = "DG"
+    DATA_PREPROCESSING = "DP"
     NATURAL_LANGUAGE_PROCESSING = "NLP"
     ANOMALY_DETECTION = "AD"
     RECOMMENDATION = "R"
@@ -38,6 +55,5 @@ class ExecutionUnitTagAcronym(str, Enum):
     CLUSTERING = "C"
     SEGMENTATION = "S"
     SPEECH_RECOGNITION = "SR"
-    DATA_PREPROCESSING = "DP"
     SENTIMENT_ANALYSIS = "SA"
     NEURAL_NETWORKS = "NN"
