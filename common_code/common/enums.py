@@ -34,6 +34,7 @@ class ExecutionUnitTagName(str, Enum):
     SPEECH_RECOGNITION = "Speech Recognition"
     SENTIMENT_ANALYSIS = "Sentiment Analysis"
     NEURAL_NETWORKS = "Neural Networks"
+    EXPLAINABlE_AI = "Explainable AI"
 
 
 class ExecutionUnitTagAcronym(str, Enum):
@@ -57,3 +58,4 @@ class ExecutionUnitTagAcronym(str, Enum):
     SPEECH_RECOGNITION = "SR"
     SENTIMENT_ANALYSIS = "SA"
     NEURAL_NETWORKS = "NN"
+    EXPLAINABlE_AI = "XAI"
