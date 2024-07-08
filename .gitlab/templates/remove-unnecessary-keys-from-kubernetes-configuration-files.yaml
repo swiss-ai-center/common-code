@@ -2,6 +2,7 @@
   stage: deploy
   image: alpine
   script:
+    - cd $WORKDIR
     # Install kubectl and yq
     - apk add --no-cache gettext kubectl yq
     # Export Kubeconfig file

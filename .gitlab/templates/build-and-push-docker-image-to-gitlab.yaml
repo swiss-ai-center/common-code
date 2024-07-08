@@ -8,6 +8,7 @@
   before_script:
     - docker login --username $CI_REGISTRY_USER --password $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
+    - cd $WORKDIR
     - |
       docker build \
         --tag "${DOCKER_IMAGE_NAME}:${CI_COMMIT_SHA}" \
