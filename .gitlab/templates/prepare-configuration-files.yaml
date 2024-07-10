@@ -1,13 +1,10 @@
-.prepare-configuration-files-and-deploy-on-kubernetes-cluster:
+.prepare-configuration-files:
   stage: deploy
   image: alpine
   script:
     - cd $WORKDIR
-    # Install kubectl and yq
-    - apk add --no-cache gettext kubectl yq
-    # Export Kubeconfig file
-    - mkdir --parent ~/.kube
-    - echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
+    # Install yq
+    - apk add --no-cache gettext yq
     # Switch to kubernetes directory
     - cd kubernetes
     # Prepare configuration files
@@ -41,11 +38,3 @@
       yq -i ".spec.template.spec.containers[0].name = \"${SERVICE_NAME}\"" stateful.yml
       yq -i ".spec.template.spec.containers[0].image = \"${DOCKER_IMAGE_NAME}:${CI_COMMIT_SHA}\"" stateful.yml
       yq -i ".spec.template.spec.containers[0].envFrom[0].configMapRef.name = \"${SERVICE_NAME}-config\"" stateful.yml
-    # Execute command on the Kubernetes cluster
-    - |
-      # Deploy service on the Kubernetes cluster
-      kubectl --namespace $NAMESPACE apply \
-        -f config-map.yml \
-        -f stateful.yml \
-        -f service.yml \
-        -f ingress.yml

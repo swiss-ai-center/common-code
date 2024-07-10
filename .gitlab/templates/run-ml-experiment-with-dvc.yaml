@@ -4,12 +4,8 @@
   script:
     - cd $ML_EXPERIMENT_PATH
     - pip install --upgrade pip
-    - pip install -r requirements.txt -r requirements-all.txt
+    - pip install -r requirements.txt -r requirements-all.txt --no-cache-dir
     - export AWS_ACCESS_KEY_ID=$S3_ACCESS_KEY_ID
     - export AWS_SECRET_ACCESS_KEY=$S3_SECRET_ACCESS_KEY
     - dvc pull
     - dvc repro
-  cache:
-    key: "$CI_COMMIT_REF_SLUG"
-    paths:
-      - .cache/pip

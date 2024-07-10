@@ -1,9 +1,6 @@
 .lint-python-app:
   stage: review
   image: python:3.11
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main" && $RUN_CICD == "true"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $RUN_CICD == "true"
   script:
     - cd $WORKDIR
     - pip install flake8

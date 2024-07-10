@@ -1,8 +1,6 @@
 .build-and-push-docker-image-to-gitlab:
   stage: publish
   image: docker:25.0.3
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main" && $RUN_CICD == "true"
   services:
     - docker:25.0.3-dind
   before_script:

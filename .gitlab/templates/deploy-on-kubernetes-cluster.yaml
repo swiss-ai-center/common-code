@@ -1,0 +1,20 @@
+.deploy-on-kubernetes-cluster:
+  stage: deploy
+  image: alpine
+  script:
+    - cd $WORKDIR
+    # Install kubectl
+    - apk add --no-cache gettext kubectl
+    # Export Kubeconfig file
+    - mkdir --parent ~/.kube
+    - echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
+    # Switch to kubernetes directory
+    - cd kubernetes
+    # Execute command on the Kubernetes cluster
+    - |
+      # Deploy service on the Kubernetes cluster
+      kubectl --namespace $NAMESPACE apply \
+        -f config-map.yml \
+        -f stateful.yml \
+        -f service.yml \
+        -f ingress.yml
