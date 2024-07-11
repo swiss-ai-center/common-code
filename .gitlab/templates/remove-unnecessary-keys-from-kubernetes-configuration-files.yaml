@@ -1,15 +1,17 @@
-.remove-unnecessary-keys-from-kubernetes-configuration-files:
+.remove-unnecessary-keys-from-kubernetes-configuration-files: &remove-unnecessary-keys-from-kubernetes-configuration-files
   stage: deploy
-  image: alpine
   script:
+    - cd $CI_PROJECT_DIR
     - cd $WORKDIR
-    # Install kubectl and yq
-    - apk add --no-cache gettext kubectl yq
+    # Install yq
+    - apt update && apt install -y wget
+    - wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+    - chmod +x /usr/local/bin/yq
+    # Switch to kubernetes directory
+    - cd kubernetes
     # Export Kubeconfig file
     - mkdir --parent ~/.kube
     - echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
-    # Switch to kubernetes directory
-    - cd kubernetes
     # Prepare configuration files
     - |
       # Delete unnecessary service configuration keys (Ingress)

@@ -1,10 +1,13 @@
-.deploy-on-kubernetes-cluster:
+.deploy-on-kubernetes-cluster: &deploy-on-kubernetes-cluster
   stage: deploy
-  image: alpine
   script:
+    - cd $CI_PROJECT_DIR
     - cd $WORKDIR
+    # Install curl
+    - apt update && apt install -y curl
     # Install kubectl
-    - apk add --no-cache gettext kubectl
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
     # Export Kubeconfig file
     - mkdir --parent ~/.kube
     - echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config

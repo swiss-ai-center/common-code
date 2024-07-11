@@ -1,10 +1,12 @@
-.prepare-configuration-files:
+.prepare-configuration-files: &prepare-configuration-files
   stage: deploy
-  image: alpine
   script:
+    - cd $CI_PROJECT_DIR
     - cd $WORKDIR
     # Install yq
-    - apk add --no-cache gettext yq
+    - apt update && apt install -y wget gettext
+    - wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+    - chmod +x /usr/local/bin/yq
     # Switch to kubernetes directory
     - cd kubernetes
     # Prepare configuration files
@@ -38,3 +40,5 @@
       yq -i ".spec.template.spec.containers[0].name = \"${SERVICE_NAME}\"" stateful.yml
       yq -i ".spec.template.spec.containers[0].image = \"${DOCKER_IMAGE_NAME}:${CI_COMMIT_SHA}\"" stateful.yml
       yq -i ".spec.template.spec.containers[0].envFrom[0].configMapRef.name = \"${SERVICE_NAME}-config\"" stateful.yml
+      # add registry secret to pull image from private registry
+      yq -i ".spec.template.spec.imagePullSecrets[0].name = \"${IMAGE_PULL_SECRET_NAME}\"" stateful.yml
