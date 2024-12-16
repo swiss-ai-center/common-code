@@ -32,6 +32,7 @@ class TaskUpdate(BaseModel):
     url: Optional[str] = None
     data_out: Optional[List[str]] = None
     status: Optional[TaskStatus] = None
+    error_message: Optional[str] = None
 
 
 class ServiceTaskTask(BaseModel):
@@ -43,6 +44,7 @@ class ServiceTaskTask(BaseModel):
     data_in: List[str]
     data_out: Optional[List[str]] = None
     status: TaskStatus
+    error_message: Optional[str] = None
     service_id: UUID
     pipeline_execution_id: Optional[UUID] = None
 
