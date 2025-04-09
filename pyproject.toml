@@ -9,8 +9,7 @@ authors = [
   { name = "Ludovic Delafontaine", email = "ludovic.delafontaine@heig-vd.ch" },
 ]
 maintainers = [
-  { name = "Andrea Petrucci", email = "andrea.petrucci@hefr.ch" },
-  { name = "Ludovic Delafontaine", email = "ludovic.delafontaine@heig-vd.ch" },
+  { name = "Rémy Marquis", email = "remy.marquis@heig-vd.ch" },
 ]
 
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
@@ -44,10 +43,10 @@ test = [
 ]
 
 [project.urls]
-"Homepage" = "https://swiss-ai-center.github.io/core-engine/"
-"Bug Reports" = "https://github.com/swiss-ai-center/core-engine/issues"
-"Demo" = "https://webapp-swiss-ai-center.kube.isc.heia-fr.ch"
-"Source" = "https://github.com/swiss-ai-center/core-engine"
+"Homepage" = "https://hes-so.ch/swiss-ai-center/"
+"Bug Reports" = "https://github.com/swiss-ai-center/common-code/issues"
+"Demo" = "https://app.swiss-ai-center.ch"
+"Source" = "https://github.com/swiss-ai-center/common-code/"
 
 [build-system]
 requires = ["setuptools>=43.0.0", "wheel"]
