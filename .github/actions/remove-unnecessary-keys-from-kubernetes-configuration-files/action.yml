@@ -17,4 +17,6 @@ runs:
       run: |
         # Delete unnecessary service configuration keys (Ingress)
         yq -i "del(.metadata.annotations.cert-manager\.io/cluster-issuer)" ingress.yml
-        yq -i "del(.spec.tls[0].secretName)" ingress.yml
+        yq -i "del(.spec.tls)" ingress.yml
+        # Change ingress class name to nginx-ext
+        yq -i ".spec.ingressClassName = \"nginx-ext\"" ingress.yml

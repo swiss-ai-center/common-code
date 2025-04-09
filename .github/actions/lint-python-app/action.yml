@@ -20,7 +20,8 @@ runs:
     - name: Install app dependencies
       shell: bash
       working-directory: ${{ inputs.python-app-path }}
-      run: pip3 install flake8
+      # get flake8 version from requirements.txt
+      run: pip install $(awk '/flake8==/ {print $0}' requirements-all.txt)
 
     - name: Lint Python code
       shell: bash

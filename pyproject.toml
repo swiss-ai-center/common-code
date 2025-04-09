@@ -1,6 +1,6 @@
 [project]
 name = "common_code"
-version = "1.0.5"
+version = "1.0.6"
 description = "Common code used by the Swiss AI Center services"
 requires-python = ">=3.10"
 license = { text = "AGPL-3.0" }
@@ -9,8 +9,7 @@ authors = [
   { name = "Ludovic Delafontaine", email = "ludovic.delafontaine@heig-vd.ch" },
 ]
 maintainers = [
-  { name = "Andrea Petrucci", email = "andrea.petrucci@hefr.ch" },
-  { name = "Ludovic Delafontaine", email = "ludovic.delafontaine@heig-vd.ch" },
+  { name = "Rémy Marquis", email = "remy.marquis@heig-vd.ch" },
 ]
 
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
@@ -19,7 +18,7 @@ dependencies = [
   "aiofiles==23.2.1",
   "email-validator==2.1.1",
   "fastapi==0.110.0",
-  "flake8==7.0.0",
+  "flake8>=7.0.0",
   "httpx==0.27.0",
   "pydantic_settings==2.2.1",
   "python-dotenv==1.0.1",
@@ -44,10 +43,10 @@ test = [
 ]
 
 [project.urls]
-"Homepage" = "https://swiss-ai-center.github.io/core-engine/"
-"Bug Reports" = "https://github.com/swiss-ai-center/core-engine/issues"
-"Demo" = "https://webapp-swiss-ai-center.kube.isc.heia-fr.ch"
-"Source" = "https://github.com/swiss-ai-center/core-engine"
+"Homepage" = "https://hes-so.ch/swiss-ai-center/"
+"Bug Reports" = "https://github.com/swiss-ai-center/common-code/issues"
+"Demo" = "https://app.swiss-ai-center.ch"
+"Source" = "https://github.com/swiss-ai-center/common-code/"
 
 [build-system]
 requires = ["setuptools>=43.0.0", "wheel"]
