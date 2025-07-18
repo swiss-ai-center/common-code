@@ -1,6 +1,7 @@
 import asyncio
 import mimetypes
 from asyncio import Queue
+
 from ..common.exceptions import NotFoundException, QueueFullException
 from ..config import Settings, get_settings
 from ..http_client import HttpClient
@@ -184,6 +185,7 @@ class TasksService:
         except Exception as e:
             self.logger.error(f"Failed to process: {str(e)}")
             TasksService.current_task.task.status = TaskStatus.ERROR
+            TasksService.current_task.task.error_message = str(e)
 
     async def end_task(self):
         """
@@ -240,6 +242,7 @@ class TasksService:
                 TaskUpdate(
                     status=TasksService.current_task.task.status,
                     data_out=TasksService.current_task.task.data_out,
+                    error_message=TasksService.current_task.task.error_message,
                 ),
             )
 
