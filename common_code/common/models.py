@@ -1,9 +1,9 @@
 from typing import List
-from typing_extensions import TypedDict
+from pydantic import BaseModel
 from .enums import FieldDescriptionType, ExecutionUnitTagName, ExecutionUnitTagAcronym
 
 
-class FieldDescription(TypedDict):
+class FieldDescription(BaseModel):
     """
     Field description model
     """
@@ -11,7 +11,7 @@ class FieldDescription(TypedDict):
     type: List[FieldDescriptionType]
 
 
-class ExecutionUnitTag(TypedDict):
+class ExecutionUnitTag(BaseModel):
     """
     Service tag model
     """
