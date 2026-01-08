@@ -1,6 +1,6 @@
 [project]
 name = "common_code"
-version = "1.0.6"
+version = "1.0.8"
 description = "Common code used by the Swiss AI Center services"
 requires-python = ">=3.10"
 license = { text = "AGPL-3.0" }
@@ -15,7 +15,7 @@ maintainers = [
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
 dependencies = [
   "aiobotocore==2.12.1",
-  "aiofiles==23.2.1",
+  "aiofiles>=23.2.1",
   "email-validator==2.1.1",
   "fastapi==0.110.0",
   "flake8>=7.0.0",
