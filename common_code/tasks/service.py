@@ -140,16 +140,15 @@ class TasksService:
         data_in_fields = self.my_service.get_data_in_fields()
         data_in_urls = TasksService.current_task.task.data_in
 
-        # Iterate over the two lists at the same time
         for data_in_field, data_in_url in zip(data_in_fields, data_in_urls):
-            allowed_file_types_enum = data_in_field["type"]
+            allowed_file_types_enum = data_in_field.type
             allowed_file_types_list = [allowed_file_type.value for allowed_file_type in allowed_file_types_enum]
 
             file_type = get_mime_type(data_in_url)
 
             if file_type not in allowed_file_types_list:
                 self.logger.error(
-                    f"Wrong file extension for {data_in_field['name']} ({allowed_file_types_list}): got {file_type}"
+                    f"Wrong file extension for {data_in_field.name} ({allowed_file_types_list}): got {file_type}"
                 )
                 TasksService.current_task.task.status = TaskStatus.ERROR
                 return
@@ -163,10 +162,9 @@ class TasksService:
                 TasksService.current_task.s3_bucket,
             )
 
-            # Each data downloaded is stored in a dictionary using api description as key, so the file list must be in
-            # the same order as the api description
-            self.current_task_data_in[data_in_field["name"]] = TaskData(data=file, type=file_type)
-            self.logger.info(f"Got {data_in_field['name']} from the storage")
+            # Keep state on the class-level dict consistently
+            TasksService.current_task_data_in[data_in_field.name] = TaskData(data=file, type=file_type)
+            self.logger.info(f"Got {data_in_field.name} from the storage")
 
     async def process_task(self):
         """
@@ -177,7 +175,6 @@ class TasksService:
         self.logger.info(f"Processing task {TasksService.current_task.task.id}")
         try:
             loop = asyncio.get_running_loop()
-            # Non-blocking process
             task_future = loop.run_in_executor(
                 None, self.my_service.process, TasksService.current_task_data_in
             )
@@ -199,13 +196,13 @@ class TasksService:
         try:
             TasksService.current_task.task.data_out = []
             for data_out_field in data_out_fields:
-                field_name = data_out_field["name"]
+                field_name = data_out_field.name
                 output_type = TasksService.current_task_data_out[field_name].type
-                allowed_output_types = data_out_field["type"]
+                allowed_output_types_list = [t.value for t in data_out_field.type]
 
-                if output_type not in allowed_output_types:
+                if output_type not in allowed_output_types_list:
                     self.logger.error(
-                        f"Wrong output type for {field_name} ({allowed_output_types}): got {output_type}"
+                        f"Wrong output type for {field_name} ({allowed_output_types_list}): got {output_type}"
                     )
                     TasksService.current_task.task.status = TaskStatus.ERROR
                     return
@@ -224,7 +221,9 @@ class TasksService:
                 )
 
                 TasksService.current_task.task.data_out.append(key)
-                TasksService.current_task.task.status = TaskStatus.FINISHED
+
+            # Mark finished after all outputs are saved
+            TasksService.current_task.task.status = TaskStatus.FINISHED
         except Exception as e:
             self.logger.error(f"Failed to save result: {str(e)}")
             TasksService.current_task.task.status = TaskStatus.ERROR
@@ -235,9 +234,7 @@ class TasksService:
         """
         Notify the engine that the task is finished
         """
-
         try:
-            # Encode the task to json
             data = jsonable_encoder(
                 TaskUpdate(
                     status=TasksService.current_task.task.status,
@@ -246,15 +243,17 @@ class TasksService:
                 ),
             )
 
+            callback_url = TasksService.current_task.callback_url
             self.logger.info(
-                f"Updating task {TasksService.current_task.task.id} "
-                f"on callback {self.current_task.callback_url}: {data}")
+                f"Updating task {TasksService.current_task.task.id} on callback {callback_url}: {data}"
+            )
 
-            # Send the update to the engine
-            await self.http_client.patch(self.current_task.callback_url, json=data)
+            await self.http_client.patch(callback_url, json=data)
             self.logger.info(f"Task {TasksService.current_task.task.id} updated")
         except Exception as e:
-            self.logger.warning(f"Failed to send back result to ({self.current_task.callback_url}): {str(e)}")
+            self.logger.warning(
+                f"Failed to send back result to ({TasksService.current_task.callback_url}): {str(e)}"
+            )
         finally:
             TasksService.current_task = None
             TasksService.current_task_data_in = dict()
