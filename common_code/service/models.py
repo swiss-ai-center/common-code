@@ -5,6 +5,8 @@ from ..common.models import FieldDescription
 from ..common.models import ExecutionUnitTag
 from .enums import ServiceStatus
 
+services = []
+
 
 class Service(BaseModel, metaclass=ABCMeta):
     """
@@ -44,3 +46,15 @@ class Service(BaseModel, metaclass=ABCMeta):
     @abstractmethod
     def process(self, data):
         pass
+
+    @abstractmethod
+    def main_test(self, data):
+        pass
+
+    @abstractmethod
+    def download_test_data(self):
+        pass
+
+    def __init_subclass__(cls) -> None:
+        services.append(cls)
+        return super().__init_subclass__()
