@@ -35,6 +35,29 @@ inputs:
   engine-announce-retry-delay:
     description: Delay between each retry
     required: true
+  keda-service:
+    description: KEDA service
+    required: false
+  keda-port:
+    description: KEDA port
+    required: false
+    default: "8080"
+  keda-min-replicas:
+    description: KEDA minimum replicas
+    required: false
+    default: "0"
+  keda-max-replicas:
+    description: KEDA maximum replicas
+    required: false
+    default: "2"
+  keda-scaledown-period:
+    description: KEDA scale down period in seconds
+    required: false
+    default: "86400"
+  keda-service-port:
+    description: KEDA service port
+    required: false
+    default: "9090"
 
 runs:
   using: composite
@@ -50,6 +73,10 @@ runs:
         MAX_TASKS: ${{ inputs.max-tasks }}
         ENGINE_ANNOUNCE_RETRIES: ${{ inputs.engine-announce-retries }}
         ENGINE_ANNOUNCE_RETRY_DELAY: ${{ inputs.engine-announce-retry-delay }}
+        KEDA_SERVICE: ${{ inputs.keda-service }}
+        KEDA_PORT: ${{ inputs.keda-port }}
+        KEDA_MIN_REPLICAS: ${{ inputs.keda-min-replicas }}
+        KEDA_MAX_REPLICAS: ${{ inputs.keda-max-replicas }}
       run: |
         # Set service configuration (ConfigMap)
         yq -i ".metadata.name = \"${{ inputs.service-name }}-config\"" config-map.yml
@@ -61,11 +88,29 @@ runs:
         # Set service configuration (Ingress)
         yq -i ".metadata.name = \"${{ inputs.service-name }}-ingress\"" ingress.yml
         yq -i ".spec.rules[0].host = \"${SERVICE_URL#*://}\"" ingress.yml
-        yq -i ".spec.rules[0].http.paths[0].backend.service.name = \"${{ inputs.service-name }}-service\"" ingress.yml
+        # If keda-service is set, use it in the backend service name
+        if [ -n "$KEDA_SERVICE" ]; then
+          yq -i ".spec.rules[0].http.paths[0].backend.service.name = \"$KEDA_SERVICE\"" ingress.yml
+          yq -i ".spec.rules[0].http.paths[0].backend.service.port.number = $KEDA_PORT" ingress.yml
+        else
+          yq -i ".spec.rules[0].http.paths[0].backend.service.name = \"${{ inputs.service-name }}-service\"" ingress.yml
+        fi
         yq -i ".spec.tls[0].hosts[0] = \"${SERVICE_URL#*://}\"" ingress.yml
         # replace . with - in service url and add -tls-cert at the end
         SECRET_NAME=$(echo "${SERVICE_URL#*://}" | sed 's/\./-/g' | sed 's/$/-tls-cert/')
         yq -i ".spec.tls[0].secretName = \"$SECRET_NAME\"" ingress.yml
+        
+        # Set KEDA configuration if keda-service is set
+        if [ -n "$KEDA_SERVICE" ]; then
+          yq -i ".metadata.name = \"${{ inputs.service-name }}-scaledobject\"" scaled-object.yml
+          yq -i ".spec.hosts[0] = \"${SERVICE_URL#*://}\"" scaled-object.yml
+          yq -i ".spec.scaleTargetRef.name = \"${{ inputs.service-name }}-stateful\"" scaled-object.yml
+          yq -i ".spec.scaleTargetRef.service = \"${{ inputs.service-name }}-service\"" scaled-object.yml
+          yq -i ".spec.scaleTargetRef.port = ${{ inputs.keda-service-port }}" scaled-object.yml
+          yq -i ".spec.replicas.min = $KEDA_MIN_REPLICAS" scaled-object.yml
+          yq -i ".spec.replicas.max = $KEDA_MAX_REPLICAS" scaled-object.yml
+          yq -i ".spec.scaledownPeriod = $KEDA_SCALEDOWN_PERIOD" scaled-object.yml
+        fi
 
         # Set service configuration (Service)
         yq -i ".metadata.name = \"${{ inputs.service-name }}-service\"" service.yml
