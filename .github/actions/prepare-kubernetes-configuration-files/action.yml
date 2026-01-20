@@ -77,6 +77,8 @@ runs:
         KEDA_PORT: ${{ inputs.keda-port }}
         KEDA_MIN_REPLICAS: ${{ inputs.keda-min-replicas }}
         KEDA_MAX_REPLICAS: ${{ inputs.keda-max-replicas }}
+        KEDA_SCALEDOWN_PERIOD: ${{ inputs.keda-scaledown-period }}
+        KEDA_SERVICE_PORT: ${{ inputs.keda-service-port }}
       run: |
         # Set service configuration (ConfigMap)
         yq -i ".metadata.name = \"${{ inputs.service-name }}-config\"" config-map.yml
