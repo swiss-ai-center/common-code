@@ -102,7 +102,7 @@ class ServiceService:
 
         self.logger.error(f"Service {slug} not found in the engine")
         return None
-    async def ping_engine(self, engine_url: str, my_service: Service):
+    async def heartbeat(self, engine_url: str, my_service: Service):
         """
         Ping the engine to signal that the service is alive
         Params:
