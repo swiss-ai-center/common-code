@@ -111,8 +111,7 @@ class ServiceService:
         """
         try:
             service_json = jsonable_encoder(my_service)
-            service_id = await self.get_service_id(my_service.slug, engine_url)
-            res = await self.http_client.post(f"{engine_url}/services/{service_id}/ping", json=service_json)
+            res = await self.http_client.post(f"{engine_url}/services/{service_json.slug}/ping", json=service_json)
 
             if res.status_code != 200:
                 self.logger.warning(f"Failed to ping the engine, "
