@@ -102,3 +102,25 @@ class ServiceService:
 
         self.logger.error(f"Service {slug} not found in the engine")
         return None
+    async def ping_engine(self, engine_url: str, my_service: Service):
+        """
+        Ping the engine to signal that the service is alive
+        Params:
+            engine_url: The URL of the engine to ping
+            my_service: The service to ping with
+        """
+        try:
+            service_json = jsonable_encoder(my_service)
+            service_id = await self.get_service_id(my_service.slug, engine_url)
+            res = await self.http_client.post(f"{engine_url}/services/{service_id}/ping", json=service_json)
+
+            if res.status_code != 200:
+                self.logger.warning(f"Failed to ping the engine, "
+                                    f"request returned {str(res.status_code)} {res.text}")
+                return False
+            else:
+                self.logger.info("Successfully pinged the engine")
+                return True
+        except Exception as e:
+            self.logger.warning(f"Failed to ping the engine: {str(e)}")
+            return False
