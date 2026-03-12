@@ -35,7 +35,7 @@ runs:
     - name: Run Python tests
       shell: bash
       working-directory: ${{ inputs.python-app-path }}
-      run: pytest
+      run: uv run pytest
 
     - name: Coverage report
       uses: orgoro/coverage@v3.1
