@@ -19,16 +19,20 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        cache: 'pip'
 
     - name: Install ML experiment dependencies
       shell: bash
       working-directory: ${{ inputs.ml-experiment-path }}
-      run: pip3 install -r requirements.txt -r requirements-all.txt
+      run: uv sync
 
     - name: Retrieve ML experiment data
       shell: bash
@@ -36,9 +40,9 @@ runs:
       env:
         AWS_ACCESS_KEY_ID: ${{ inputs.s3-access-key-id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.s3-secret-access-key }}
-      run: dvc pull
+      run: uv run dvc pull
 
     - name: Reproduce ML experiment
       shell: bash
       working-directory: ${{ inputs.ml-experiment-path }}
-      run: dvc repro
+      run: uv run dvc repro
