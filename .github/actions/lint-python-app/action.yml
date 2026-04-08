@@ -15,15 +15,20 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        cache: 'pip'
+
+    - name: Install uv
+      shell: bash
+      # Install uv using the existing pip
+      run: pip install uv
 
     - name: Install app dependencies
       shell: bash
       working-directory: ${{ inputs.python-app-path }}
-      # get flake8 version from requirements.txt
-      run: pip install $(awk '/flake8==/ {print $0}' requirements-all.txt)
+      # Get flake8 version from requirements.txt and install using uv
+      # The --system flag is required because uv avoids modifying system Python by default
+      run: uv sync
 
     - name: Lint Python code
       shell: bash
       working-directory: ${{ inputs.python-app-path }}
-      run: flake8 .
+      run: uv run flake8 .
