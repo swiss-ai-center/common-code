@@ -137,34 +137,47 @@ class TasksService:
         self.logger.info(f"Got task {TasksService.current_task} from the queue")
         TasksService.current_task.task.status = TaskStatus.FETCHING
 
-        data_in_fields = self.my_service.get_data_in_fields()
-        data_in_urls = TasksService.current_task.task.data_in
+        data_in_fields = self.my_service.get_data_in_fields() or []
+        data_in_urls = TasksService.current_task.task.data_in or []
 
-        for data_in_field, data_in_url in zip(data_in_fields, data_in_urls):
-            allowed_file_types_enum = data_in_field.type
-            allowed_file_types_list = [allowed_file_type.value for allowed_file_type in allowed_file_types_enum]
+        if len(data_in_fields) == 1:
+            grouped_inputs = [(data_in_fields[0], data_in_urls)]
+        else:
+            grouped_inputs = [(data_in_field, [data_in_url]) for data_in_field, data_in_url in zip(data_in_fields, data_in_urls)]
 
-            file_type = get_mime_type(data_in_url)
+        for data_in_field, field_urls in grouped_inputs:
+            task_data_items = []
 
-            if file_type not in allowed_file_types_list:
-                self.logger.error(
-                    f"Wrong file extension for {data_in_field.name} ({allowed_file_types_list}): got {file_type}"
+            for data_in_url in field_urls:
+                allowed_file_types_enum = data_in_field.type
+                allowed_file_types_list = [allowed_file_type.value for allowed_file_type in allowed_file_types_enum]
+
+                file_type = get_mime_type(data_in_url)
+
+                if file_type not in allowed_file_types_list:
+                    self.logger.error(
+                        f"Wrong file extension for {data_in_field.name} ({allowed_file_types_list}): got {file_type}"
+                    )
+                    TasksService.current_task.task.status = TaskStatus.ERROR
+                    return
+
+                file = await self.storage.get_file(
+                    data_in_url,
+                    TasksService.current_task.s3_region,
+                    TasksService.current_task.s3_secret_access_key,
+                    TasksService.current_task.s3_access_key_id,
+                    TasksService.current_task.s3_host,
+                    TasksService.current_task.s3_bucket,
                 )
-                TasksService.current_task.task.status = TaskStatus.ERROR
-                return
 
-            file = await self.storage.get_file(
-                data_in_url,
-                TasksService.current_task.s3_region,
-                TasksService.current_task.s3_secret_access_key,
-                TasksService.current_task.s3_access_key_id,
-                TasksService.current_task.s3_host,
-                TasksService.current_task.s3_bucket,
-            )
+                task_data_items.append(TaskData(data=file, type=file_type))
+                self.logger.info(f"Got {data_in_field.name} from the storage")
 
             # Keep state on the class-level dict consistently
-            TasksService.current_task_data_in[data_in_field.name] = TaskData(data=file, type=file_type)
-            self.logger.info(f"Got {data_in_field.name} from the storage")
+            if len(task_data_items) == 1:
+                TasksService.current_task_data_in[data_in_field.name] = task_data_items[0]
+            else:
+                TasksService.current_task_data_in[data_in_field.name] = task_data_items
 
     async def process_task(self):
         """
@@ -197,30 +210,35 @@ class TasksService:
             TasksService.current_task.task.data_out = []
             for data_out_field in data_out_fields:
                 field_name = data_out_field.name
-                output_type = TasksService.current_task_data_out[field_name].type
+                field_output = TasksService.current_task_data_out[field_name]
                 allowed_output_types_list = [t.value for t in data_out_field.type]
 
-                if output_type not in allowed_output_types_list:
-                    self.logger.error(
-                        f"Wrong output type for {field_name} ({allowed_output_types_list}): got {output_type}"
+                output_items = field_output if isinstance(field_output, list) else [field_output]
+
+                for output_item in output_items:
+                    output_type = output_item.type
+
+                    if output_type not in allowed_output_types_list:
+                        self.logger.error(
+                            f"Wrong output type for {field_name} ({allowed_output_types_list}): got {output_type}"
+                        )
+                        TasksService.current_task.task.status = TaskStatus.ERROR
+                        return
+
+                    data = output_item.data
+                    file_extension = get_extension(output_type)
+
+                    key = await self.storage.upload(
+                        data,
+                        file_extension,
+                        TasksService.current_task.s3_region,
+                        TasksService.current_task.s3_secret_access_key,
+                        TasksService.current_task.s3_access_key_id,
+                        TasksService.current_task.s3_host,
+                        TasksService.current_task.s3_bucket,
                     )
-                    TasksService.current_task.task.status = TaskStatus.ERROR
-                    return
 
-                data = TasksService.current_task_data_out[field_name].data
-                file_extension = get_extension(output_type)
-
-                key = await self.storage.upload(
-                    data,
-                    file_extension,
-                    TasksService.current_task.s3_region,
-                    TasksService.current_task.s3_secret_access_key,
-                    TasksService.current_task.s3_access_key_id,
-                    TasksService.current_task.s3_host,
-                    TasksService.current_task.s3_bucket,
-                )
-
-                TasksService.current_task.task.data_out.append(key)
+                    TasksService.current_task.task.data_out.append(key)
 
             # Mark finished after all outputs are saved
             TasksService.current_task.task.status = TaskStatus.FINISHED
