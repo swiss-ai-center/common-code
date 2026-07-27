@@ -17,10 +17,10 @@ dependencies = [
   "aiobotocore>=2.26.0,<3.0.0",
   "aiofiles>=23.2.1,<24.0.0",
   "email-validator>=2.3.0,<3.0.0",
-  "fastapi~=0.135.1",
+  "fastapi~=0.135.4",
   "flake8>=7.0.0,<8.0.0",
   "httpx~=0.28.1",
-  "pydantic_settings>=2.13.1,<3.0.0",
+  "pydantic_settings>=2.14.2,<3.0.0",
   "python-dotenv>=1.2.2,<2.0.0",
   "PyYAML>=6.0.3,<7.0.0",
   "uvicorn~=0.41.0",
@@ -36,10 +36,10 @@ dependencies = [
 # projects.
 [project.optional-dependencies]
 test = [
-  "pytest==8.1.1",
-  "pytest-asyncio==0.23.5.post1",
-  "pytest-cov==4.1.0",
-  "pytest-httpserver==1.0.10",
+  "pytest==9.1.1",
+  "pytest-asyncio==1.4.0",
+  "pytest-cov==7.1.0",
+  "pytest-httpserver==1.1.5",
 ]
 
 [project.urls]
@@ -51,5 +51,4 @@ test = [
 [build-system]
 requires = ["setuptools>=43.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
-
 
