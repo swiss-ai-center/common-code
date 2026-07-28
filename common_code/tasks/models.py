@@ -54,11 +54,7 @@ class ServiceTaskBase(BaseModel):
     Base class for Service task
     This model is used in subclasses
     """
-    s3_access_key_id: str
-    s3_secret_access_key: str
-    s3_region: str
-    s3_host: str
-    s3_bucket: str
+    storage_url: str
     task: ServiceTaskTask
     callback_url: str
 
