@@ -12,3 +12,11 @@ class QueueFullException(Exception):
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
+
+
+class StorageTransferException(Exception):
+    """Exception raised when a transfer through the Core Engine fails."""
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)

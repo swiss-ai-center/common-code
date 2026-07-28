@@ -1,122 +1,89 @@
+from urllib.parse import quote
+
+import httpx
 from fastapi import Depends
+
+from ..common.exceptions import StorageTransferException
+from ..http_client import HttpClient
 from ..logger.logger import Logger, get_logger
-from aiobotocore.session import get_session
-from botocore.exceptions import ClientError
-from uuid import uuid4
 
 
 class StorageService:
     def __init__(
             self,
             logger: Logger = Depends(get_logger),
+            http_client: HttpClient = Depends(),
     ):
         self.logger = logger
+        self.http_client = http_client
         self.logger.set_source(__name__)
 
     async def upload(
             self,
-            upload_file: bytes,
+            data: bytes,
             file_extension_with_dot: str,
-            region_name: str,
-            secret_access_key: str,
-            access_key_id: str,
-            endpoint_url: str,
-            bucket: str,
-    ):
+            content_type: str,
+            storage_url: str,
+    ) -> str:
         """
-        Uploads a file to the storage service
-        :param upload_file: The file to upload (bytes)
-        :param file_extension: The file extension (with the dot)
-        :param region_name: The region name of the S3 server
-        :param secret_access_key: The secret access key of the S3 server
-        :param access_key_id: The access key id of the S3 server
-        :param endpoint_url: The endpoint url of the S3 server
-        :param bucket: The bucket name on the S3 server
-        """
-        key = f"{uuid4()}{file_extension_with_dot}"
-        session = get_session()
+        Upload a file through the Core Engine storage endpoint.
 
+        :param data: File contents.
+        :param file_extension_with_dot: File extension, including its leading dot.
+        :param content_type: MIME type of the file.
+        :param storage_url: Core Engine storage endpoint.
+        :return: Storage key returned by the Core Engine.
+        """
         try:
-            async with session.create_client(
-                    's3',
-                    region_name=region_name,
-                    aws_secret_access_key=secret_access_key,
-                    aws_access_key_id=access_key_id,
-                    endpoint_url=endpoint_url
-            ) as client:
-                await client.put_object(Bucket=bucket, Key=key, Body=upload_file)
-
+            response = await self.http_client.post(
+                storage_url.rstrip("/"),
+                files={
+                    "file": (
+                        f"result{file_extension_with_dot}",
+                        data,
+                        content_type,
+                    )
+                },
+                timeout=None,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            key = payload.get("key") if isinstance(payload, dict) else None
+            if not isinstance(key, str) or not key:
+                raise StorageTransferException(
+                    "Storage upload response does not contain a valid key"
+                )
             return key
-        except ClientError as e:
-            self.logger.error(f"Error uploading file: {e}")
-            return None
+        except StorageTransferException:
+            raise
+        except (httpx.HTTPError, ValueError) as e:
+            self.logger.error(f"Error uploading file through Core Engine: {e}")
+            raise StorageTransferException(
+                "File cannot be uploaded through Core Engine"
+            ) from e
 
     async def get_file(
             self,
             key: str,
-            region_name: str,
-            secret_access_key: str,
-            access_key_id: str,
-            endpoint_url: str,
-            bucket: str,
-    ):
+            storage_url: str,
+    ) -> bytes:
         """
-        Gets a file from the storage service
-        :param key: The key of the file to retrieve
-        :param region_name: The region name of the S3 server
-        :param secret_access_key: The secret access key of the S3 server
-        :param access_key_id: The access key id of the S3 server
-        :param endpoint_url: The endpoint url of the S3 server
-        :param bucket: The bucket name on the S3 server
-        :return: The file as bytes
-        """
-        session = get_session()
+        Get a file through the Core Engine storage endpoint.
 
+        :param key: Key of the file to retrieve.
+        :param storage_url: Core Engine storage endpoint.
+        :return: File contents.
+        """
         try:
-            async with session.create_client(
-                    's3',
-                    region_name=region_name,
-                    aws_secret_access_key=secret_access_key,
-                    aws_access_key_id=access_key_id,
-                    endpoint_url=endpoint_url
-            ) as client:
-                response = await client.get_object(Bucket=bucket, Key=key)
-
-                async with response['Body'] as stream:
-                    file = await stream.read()
-                    return file
-        except ClientError as e:
-            self.logger.error(f"Error getting file: {e}")
-            return None
-
-    async def delete(
-            self,
-            key,
-            region_name,
-            secret_access_key,
-            access_key_id,
-            endpoint_url,
-            bucket,
-    ):
-        """
-        Deletes a file from the storage service
-        :param key: The key of the file to retrieve
-        :param region_name: The region name of the S3 server
-        :param secret_access_key: The secret access key of the S3 server
-        :param access_key_id: The access key id of the S3 server
-        :param endpoint_url: The endpoint url of the S3 server
-        :param bucket: The bucket name on the S3 server
-        """
-        session = get_session()
-
-        try:
-            async with session.create_client(
-                    's3',
-                    region_name=region_name,
-                    aws_secret_access_key=secret_access_key,
-                    aws_access_key_id=access_key_id,
-                    endpoint_url=endpoint_url
-            ) as client:
-                await client.delete_object(Bucket=bucket, Key=key)
-        except ClientError as e:
-            self.logger.error(f"Error deleting file: {e}")
+            encoded_key = quote(key, safe="")
+            response = await self.http_client.get(
+                f"{storage_url.rstrip('/')}/{encoded_key}",
+                timeout=None,
+            )
+            response.raise_for_status()
+            return response.content
+        except httpx.HTTPError as e:
+            self.logger.error(f"Error downloading file through Core Engine: {e}")
+            raise StorageTransferException(
+                "File cannot be downloaded through Core Engine"
+            ) from e

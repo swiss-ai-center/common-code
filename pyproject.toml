@@ -14,7 +14,6 @@ maintainers = [
 
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
 dependencies = [
-  "aiobotocore>=2.26.0,<3.0.0",
   "aiofiles>=23.2.1,<24.0.0",
   "email-validator>=2.3.0,<3.0.0",
   "fastapi~=0.135.4",
@@ -51,4 +50,3 @@ test = [
 [build-system]
 requires = ["setuptools>=43.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
-

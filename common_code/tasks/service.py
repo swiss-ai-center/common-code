@@ -2,7 +2,11 @@ import asyncio
 import mimetypes
 from asyncio import Queue
 
-from ..common.exceptions import NotFoundException, QueueFullException
+from ..common.exceptions import (
+    NotFoundException,
+    QueueFullException,
+    StorageTransferException,
+)
 from ..config import Settings, get_settings
 from ..http_client import HttpClient
 from ..logger.logger import Logger
@@ -138,29 +142,35 @@ class TasksService:
         TasksService.current_task.task.status = TaskStatus.FETCHING
 
         data_in_fields = self.my_service.get_data_in_fields()
-        data_in_urls = TasksService.current_task.task.data_in
+        data_in_keys = TasksService.current_task.task.data_in
 
-        for data_in_field, data_in_url in zip(data_in_fields, data_in_urls):
+        for data_in_field, data_in_key in zip(data_in_fields, data_in_keys):
             allowed_file_types_enum = data_in_field.type
             allowed_file_types_list = [allowed_file_type.value for allowed_file_type in allowed_file_types_enum]
 
-            file_type = get_mime_type(data_in_url)
+            file_type = get_mime_type(data_in_key)
 
             if file_type not in allowed_file_types_list:
-                self.logger.error(
-                    f"Wrong file extension for {data_in_field.name} ({allowed_file_types_list}): got {file_type}"
+                error_message = (
+                    f"Wrong file extension for {data_in_field.name} "
+                    f"({allowed_file_types_list}): got {file_type}"
                 )
+                self.logger.error(error_message)
                 TasksService.current_task.task.status = TaskStatus.ERROR
+                TasksService.current_task.task.error_message = error_message
                 return
 
-            file = await self.storage.get_file(
-                data_in_url,
-                TasksService.current_task.s3_region,
-                TasksService.current_task.s3_secret_access_key,
-                TasksService.current_task.s3_access_key_id,
-                TasksService.current_task.s3_host,
-                TasksService.current_task.s3_bucket,
-            )
+            try:
+                file = await self.storage.get_file(
+                    data_in_key,
+                    TasksService.current_task.storage_url,
+                )
+            except StorageTransferException as e:
+                error_message = f"Could not download input {data_in_field.name}: {e}"
+                self.logger.error(error_message)
+                TasksService.current_task.task.status = TaskStatus.ERROR
+                TasksService.current_task.task.error_message = error_message
+                return
 
             # Keep state on the class-level dict consistently
             TasksService.current_task_data_in[data_in_field.name] = TaskData(data=file, type=file_type)
@@ -186,8 +196,7 @@ class TasksService:
 
     async def end_task(self):
         """
-        Update the task status
-        and store the result on S3
+        Update the task status and upload the result through the Core Engine.
         """
         TasksService.current_task.task.status = TaskStatus.SAVING
 
@@ -213,11 +222,8 @@ class TasksService:
                 key = await self.storage.upload(
                     data,
                     file_extension,
-                    TasksService.current_task.s3_region,
-                    TasksService.current_task.s3_secret_access_key,
-                    TasksService.current_task.s3_access_key_id,
-                    TasksService.current_task.s3_host,
-                    TasksService.current_task.s3_bucket,
+                    output_type,
+                    TasksService.current_task.storage_url,
                 )
 
                 TasksService.current_task.task.data_out.append(key)
@@ -227,8 +233,7 @@ class TasksService:
         except Exception as e:
             self.logger.error(f"Failed to save result: {str(e)}")
             TasksService.current_task.task.status = TaskStatus.ERROR
-        finally:
-            TasksService.amount_of_tasks -= 1
+            TasksService.current_task.task.error_message = str(e)
 
     async def notify_engine(self):
         """
@@ -255,6 +260,7 @@ class TasksService:
                 f"Failed to send back result to ({TasksService.current_task.callback_url}): {str(e)}"
             )
         finally:
+            TasksService.amount_of_tasks -= 1
             TasksService.current_task = None
             TasksService.current_task_data_in = dict()
             TasksService.current_task_data_out = dict()
@@ -274,6 +280,8 @@ class TasksService:
                 await asyncio.sleep(1)
                 continue
 
-            await self.process_task()
-            await self.end_task()
+            if TasksService.current_task.task.status != TaskStatus.ERROR:
+                await self.process_task()
+            if TasksService.current_task.task.status != TaskStatus.ERROR:
+                await self.end_task()
             await self.notify_engine()
